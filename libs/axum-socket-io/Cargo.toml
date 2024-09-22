@@ -1,0 +1,13 @@
+[package]
+name = "axum-socket-io"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7" }
+sha-1 = "0.10"
+base64 = "0.21"
+hyper = "1.2.0"
+hyper-util = "0.1"
+web-socket-io = { path = "../../" }
