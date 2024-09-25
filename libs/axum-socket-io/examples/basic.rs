@@ -6,10 +6,10 @@ use web_socket_io::Procedure;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let app = Router::new().route("/ws", get(ws_handler));
+    let app = Router::new().route("/basic", get(ws_handler));
     let listener = TcpListener::bind("127.0.0.1:3000").await?;
-
     println!("listening on {}", listener.local_addr()?);
+
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
@@ -25,13 +25,17 @@ async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     println!("A user connected: {addr:#?}");
 
     while let Ok(ev) = socket.recv().await {
-        // socket.join("");
-        // socket.leave("");
-        // socket.to("room").emit("");
+        // let g = socket.emit("name", "sdsd").await;
 
         match ev {
-            Procedure::Call(_) => todo!(),
-            Procedure::Notify(_) => todo!(),
+            Procedure::Call(req, _res) => {
+                println!("Call: req.method(): {:#?}", req.method());
+                println!("Call: req.data(): {:#?}", req.data());
+            }
+            Procedure::Notify(req) => {
+                println!("Notify: req.method(): {:#?}", req.method());
+                println!("Notify: req.data(): {:#?}", std::str::from_utf8(req.data()));
+            }
         }
     }
 

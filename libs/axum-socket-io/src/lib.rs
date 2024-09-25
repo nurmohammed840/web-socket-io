@@ -3,7 +3,6 @@ use axum::{
     body::Bytes,
     extract::FromRequestParts,
     http::{header, request::Parts, HeaderMap, HeaderName, HeaderValue, Method, StatusCode},
-    response::Response,
 };
 use hyper_util::rt::TokioIo;
 use std::future::Future;
@@ -16,7 +15,7 @@ pub struct SocketIoUpgrade {
 }
 
 impl SocketIoUpgrade {
-    pub fn on_upgrade<C, Fut>(self, callback: C) -> Response
+    pub fn on_upgrade<C, Fut>(self, callback: C) -> axum::response::Response
     where
         C: FnOnce(SocketIo) -> Fut + Send + 'static,
         Fut: Future<Output = ()> + Send + 'static,
@@ -27,7 +26,7 @@ impl SocketIoUpgrade {
                 callback(SocketIo::new(reader, writer, 2000)).await;
             }
         });
-        Response::builder()
+        axum::response::Response::builder()
             .status(StatusCode::SWITCHING_PROTOCOLS)
             .header(header::CONNECTION, HeaderValue::from_static("upgrade"))
             .header(header::UPGRADE, HeaderValue::from_static("websocket"))
