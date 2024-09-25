@@ -3,7 +3,7 @@ use error::{ConnClose, EmitError, ReceiverClosed};
 pub use web_socket;
 
 use core::str;
-use std::io;
+use std::{collections::HashMap, io};
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     sync::mpsc::Sender,
@@ -15,6 +15,7 @@ pub(crate) type DynErr = Box<dyn std::error::Error + Send + Sync>;
 pub struct SocketIo {
     ws: WebSocket<Box<dyn AsyncRead + Send + Unpin + 'static>>,
     tx: Sender<Reply>,
+    tasks: HashMap<u32, ()>
 }
 
 enum Reply {
@@ -91,6 +92,7 @@ impl SocketIo {
         Self {
             ws: WebSocket::server(Box::new(reader)),
             tx,
+            tasks: Default::default(),
         }
     }
 

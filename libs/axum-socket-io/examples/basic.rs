@@ -25,7 +25,7 @@ async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     println!("A user connected: {addr:#?}");
 
     while let Ok(ev) = socket.recv().await {
-        // let g = socket.emit("name", "sdsd").await;
+        let _g = socket.emit("name", "data").await;
 
         match ev {
             Procedure::Call(req, _res) => {

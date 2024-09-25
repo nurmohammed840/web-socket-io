@@ -4,20 +4,65 @@ export class SocketIo {
     #id = 1;
     #req: Record<number, (value: any) => void> = {}
 
+    #event: Record<string, ReadableStreamDefaultController<Uint8Array>> = {}
+
     constructor(url: string | URL) {
         this.ws = new WebSocket(url);
-        // this.ws.onmessage = (ev) => {
-        //     ev.data;
-        // }
+        this.ws.binaryType = "arraybuffer"
+        this.ws.onmessage = (ev) => {
+            let data = new Uint8Array(ev.data);
+            let frame_type = data[0];
+
+            // responce
+            if (frame_type == 1) {
+                let call_id = new DataView(data.buffer).getUint32(1, false);
+                let payload = data.slice(5);
+
+                this.#req[call_id]?.(payload);
+                delete this.#req[call_id];
+            }
+            // emit
+            else if (frame_type == 2) {
+                let event_name_len = data[1];
+                let event_name = new TextDecoder().decode(data.slice(2, event_name_len + 2));
+                let payload = data.slice(2 + event_name_len);
+                this.#event[event_name]?.enqueue(payload);
+            }
+        }
     }
 
-    async connect(): Promise<void> {
+    status() {
+        return {
+            pending: Object.keys(this.#req),
+            events: Object.keys(this.#event)
+        }
+    }
+
+    removeEvent(name: string) {
+        return delete this.#event[name]
+    }
+
+    async *on(name: string) {
+        let stream = new ReadableStream({
+            start(c) {
+                this.#event[name] ??= c;
+            }
+        });
+        let reader = stream.getReader();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) return value;
+            yield value;
+        }
+    }
+
+    async connect(): Promise<any> {
         if (this.ws.readyState == this.ws.OPEN) {
             return
         }
         if (this.ws.readyState == this.ws.CONNECTING) {
             return new Promise((resolve, reject) => {
-                this.ws.onopen = _ev => resolve()
+                this.ws.onopen = ev => resolve(ev)
                 this.ws.onclose = ev => reject(ev)
                 this.ws.onerror = ev => reject(ev)
             });
@@ -69,9 +114,6 @@ export class SocketIo {
         ]));
     }
 
-    // async *on<K extends keyof O>(ev: K): AsyncGenerator<O[K]> {
-    //     // yield "adwwa"
-    // }
 }
 
 function encodeEventName(ev: string) {
