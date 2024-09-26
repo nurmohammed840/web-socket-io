@@ -43,9 +43,10 @@ export class SocketIo {
     }
 
     async *on(name: string) {
+        let self = this;
         let stream = new ReadableStream({
             start(c) {
-                this.#event[name] ??= c;
+                self.#event[name] ??= c;
             }
         });
         let reader = stream.getReader();
