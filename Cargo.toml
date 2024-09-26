@@ -1,5 +1,5 @@
 [workspace]
-members = ["libs/axum-socket-io"]
+members = ["examples/basic", "libs/axum-socket-io"]
 
 [package]
 name = "web-socket-io"

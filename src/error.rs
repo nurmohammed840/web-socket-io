@@ -15,21 +15,21 @@ impl fmt::Display for ConnClose {
 impl std::error::Error for ConnClose {}
 
 #[derive(Debug)]
-pub enum EmitError {
+pub enum NotifyError {
     EventNameTooBig,
     ReceiverClosed,
 }
 
-impl fmt::Display for EmitError {
+impl fmt::Display for NotifyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EmitError::EventNameTooBig => write!(f, "event name exceeds the allowed length."),
-            EmitError::ReceiverClosed => write!(f, "receiver is already closed."),
+            NotifyError::EventNameTooBig => write!(f, "event name exceeds the allowed length."),
+            NotifyError::ReceiverClosed => write!(f, "receiver is already closed."),
         }
     }
 }
 
-impl std::error::Error for EmitError {}
+impl std::error::Error for NotifyError {}
 
 #[derive(Debug)]
 pub struct ReceiverClosed;

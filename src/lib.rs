@@ -1,5 +1,5 @@
 pub mod error;
-use error::{ConnClose, EmitError, ReceiverClosed};
+use error::{ConnClose, NotifyError, ReceiverClosed};
 pub use web_socket;
 
 use std::{
@@ -37,16 +37,16 @@ pub enum Procedure {
 }
 
 #[derive(Clone)]
-pub struct Emitter {
+pub struct Notifier {
     tx: Sender<Reply>,
 }
 
-async fn emit(tx: &Sender<Reply>, name: &str, data: &[u8]) -> Result<(), EmitError> {
+async fn notify(tx: &Sender<Reply>, name: &str, data: &[u8]) -> Result<(), NotifyError> {
     let raw_name = name.as_bytes();
     let method_name_len: u8 = raw_name
         .len()
         .try_into()
-        .map_err(|_| EmitError::EventNameTooBig)?;
+        .map_err(|_| NotifyError::EventNameTooBig)?;
 
     let mut buf = Vec::with_capacity(5 + data.len());
 
@@ -57,24 +57,24 @@ async fn emit(tx: &Sender<Reply>, name: &str, data: &[u8]) -> Result<(), EmitErr
 
     tx.send(Reply::Response(buf.into()))
         .await
-        .map_err(|_| EmitError::ReceiverClosed)
+        .map_err(|_| NotifyError::ReceiverClosed)
 }
 
-impl Emitter {
-    pub async fn emit(&self, name: &str, data: impl AsRef<[u8]>) -> Result<(), EmitError> {
-        emit(&self.tx, name, data.as_ref()).await
+impl Notifier {
+    pub async fn notify(&self, name: &str, data: impl AsRef<[u8]>) -> Result<(), NotifyError> {
+        notify(&self.tx, name, data.as_ref()).await
     }
 }
 
 impl SocketIo {
-    pub fn emitter(&self) -> Emitter {
-        Emitter {
+    pub fn notifier(&self) -> Notifier {
+        Notifier {
             tx: self.tx.clone(),
         }
     }
 
-    pub async fn emit(&mut self, name: &str, data: impl AsRef<[u8]>) -> Result<(), EmitError> {
-        emit(&self.tx, name, data.as_ref()).await
+    pub async fn notify(&mut self, name: &str, data: impl AsRef<[u8]>) -> Result<(), NotifyError> {
+        notify(&self.tx, name, data.as_ref()).await
     }
 
     pub fn new<I, O>(reader: I, writer: O, buffer: usize) -> Self
@@ -294,7 +294,7 @@ impl Response {
         self.id
     }
 
-    pub async fn response(self, data: impl AsRef<[u8]>) -> Result<(), ReceiverClosed> {
+    pub async fn send(self, data: impl AsRef<[u8]>) -> Result<(), ReceiverClosed> {
         let data = data.as_ref();
         let mut buf = Vec::with_capacity(5 + data.len());
 
