@@ -28,7 +28,7 @@ async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
         let _g = socket.emit("name", "data").await;
 
         match ev {
-            Procedure::Call(req, _res) => {
+            Procedure::Call(req, _res, _) => {
                 println!("Call: req.method(): {:#?}", req.method());
                 println!("Call: req.data(): {:#?}", req.data());
             }
