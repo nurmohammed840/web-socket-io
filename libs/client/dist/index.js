@@ -123,15 +123,25 @@ function concatBytes(chunks) {
     }
     return bytes;
 }
-if (!Promise.withResolvers) {
-    //@ts-ignore
-    Promise.withResolvers = function () {
-        let resolve, reject;
-        const promise = new Promise((res, rej) => {
-            resolve = res;
-            reject = rej;
-        });
-        return { promise, resolve, reject };
-    };
-}
-// --------------------------------------------------------
+// ------------------------- polyfill -------------------------------
+// interface PromiseWithResolvers<T> extends Promise<T> {
+//     resolve(value: T | PromiseLike<T>): void;
+//     reject(reason?: any): void;
+//     promise: Promise<T>
+// }
+// declare global {
+//     interface PromiseConstructor {
+//         withResolvers<T>(): PromiseWithResolvers<T>;
+//     }
+// }
+// if (!Promise.withResolvers) {
+//     //@ts-ignore
+//     Promise.withResolvers = function () {
+//         let resolve, reject;
+//         const promise = new Promise((res, rej) => {
+//             resolve = res;
+//             reject = rej;
+//         });
+//         return { promise, resolve, reject };
+//     };
+// }

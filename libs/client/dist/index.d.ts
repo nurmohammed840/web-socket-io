@@ -14,14 +14,3 @@ export declare class SocketIo {
     }): Promise<T>;
     notify(ev: string, value: string | ArrayLike<number>): void;
 }
-interface PromiseWithResolvers<T> extends Promise<T> {
-    resolve(value: T | PromiseLike<T>): void;
-    reject(reason?: any): void;
-    promise: Promise<T>;
-}
-declare global {
-    interface PromiseConstructor {
-        withResolvers<T>(): PromiseWithResolvers<T>;
-    }
-}
-export {};

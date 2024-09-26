@@ -1,0 +1,5 @@
+{
+    "name": "@nur/client-socket-io",
+    "version": "0.0.1",
+    "exports": "./src/index.ts"
+}
