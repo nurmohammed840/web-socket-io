@@ -70,14 +70,15 @@
 </body>
 
 <script type="module">
-    import { SocketIo } from "https://esm.sh/client-socket-io";
+        import { SocketIo } from "../../libs/client-socket-io/dist/index.js";
+        // import { SocketIo } from "https://esm.sh/client-socket-io";
 
     const socket = new SocketIo("ws://127.0.0.1:3000/socket");
     await socket.connect();
 
-    async function onEcho() {
-        for await (const msg of socket.on("echo")) {
-            appendMsg("[Echo] " + new TextDecoder().decode(msg));
+        async function onPong() {
+            for await (const msg of socket.on("pong")) {
+                appendMsg("[Pong] " + new TextDecoder().decode(msg));
         }
     }
 
@@ -98,11 +99,11 @@
         }
     }
 
-    [onNewUser, onEcho, onChatMsg, onUserDisconnected].forEach(fn => fn().catch(console.error))
+        [onNewUser, onPong, onChatMsg, onUserDisconnected].forEach(fn => fn().catch(console.error))
 
     async function Action(msg) {
-        if (msg.startsWith(":echo")) {
-            socket.notify("echo", msg.slice(5))
+        if (msg.startsWith(":ping")) {
+            socket.notify("ping", msg.slice(5))
         }
         else if (msg.startsWith(":myip")) {
             let addr = await socket.call("myip", "");
@@ -117,12 +118,12 @@
 
     const form = document.getElementById('form');
     const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
 
     form.addEventListener('submit', (ev) => {
         ev.preventDefault();
-        const msg = input.value;
-        if (msg) {
-            Action(msg)
+        if (input.value) {
+            Action(input.value)
             input.value = '';
         }
     });

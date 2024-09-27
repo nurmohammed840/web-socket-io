@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../../../README.md")]
+
 use axum::{
     async_trait,
     body::Bytes,
@@ -9,13 +12,20 @@ use std::future::Future;
 
 pub use web_socket_io::*;
 
+/// Extractor for establishing `SocketIo` connections.
 pub struct SocketIoUpgrade {
     sec_websocket_key: HeaderValue,
     on_upgrade: hyper::upgrade::OnUpgrade,
 }
 
 impl SocketIoUpgrade {
-    pub fn on_upgrade<C, Fut>(self, callback: C) -> axum::response::Response
+    /// Finalize upgrading the connection and call the provided callback with `SocketIo` instance.
+    ///
+    /// ## Arguments
+    ///
+    /// * `buffer` - The size of the buffer to be used in the `SocketIo` instance.
+    /// * `callback` - A function that will be called with the upgraded `SocketIo` instance.
+    pub fn on_upgrade<C, Fut>(self, buffer: usize, callback: C) -> axum::response::Response
     where
         C: FnOnce(SocketIo) -> Fut + Send + 'static,
         Fut: Future<Output = ()> + Send + 'static,
@@ -23,13 +33,19 @@ impl SocketIoUpgrade {
         tokio::spawn(async move {
             if let Ok(upgraded) = self.on_upgrade.await {
                 let (reader, writer) = tokio::io::split(TokioIo::new(upgraded));
-                callback(SocketIo::new(reader, writer, 2000)).await;
+                callback(SocketIo::new(reader, writer, buffer)).await;
             }
         });
+
+        static H_UPGRADE: HeaderValue = HeaderValue::from_static("upgrade");
+        static H_WEBSOCKET: HeaderValue = HeaderValue::from_static("websocket");
+        static H_WS_PROTOCOL: HeaderValue = HeaderValue::from_static("websocket.io-rpc-v0.1");
+
         axum::response::Response::builder()
             .status(StatusCode::SWITCHING_PROTOCOLS)
-            .header(header::CONNECTION, HeaderValue::from_static("upgrade"))
-            .header(header::UPGRADE, HeaderValue::from_static("websocket"))
+            .header(header::CONNECTION, H_UPGRADE.clone())
+            .header(header::UPGRADE, H_WEBSOCKET.clone())
+            .header(header::SEC_WEBSOCKET_PROTOCOL, H_WS_PROTOCOL.clone())
             .header(
                 header::SEC_WEBSOCKET_ACCEPT,
                 sign(self.sec_websocket_key.as_bytes()),
@@ -57,6 +73,13 @@ where
             return Err(());
         }
         if !header_eq(&parts.headers, header::SEC_WEBSOCKET_VERSION, "13") {
+            return Err(());
+        }
+        if !header_eq(
+            &parts.headers,
+            header::SEC_WEBSOCKET_PROTOCOL,
+            "websocket.io-rpc-v0.1",
+        ) {
             return Err(());
         }
         Ok(Self {

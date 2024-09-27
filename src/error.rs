@@ -1,8 +1,11 @@
 use std::fmt;
 
+/// Represents a connection closure with a code and reason.
 #[derive(Debug)]
 pub struct ConnClose {
+    /// represents the status code of the close event.
     pub code: u16,
+    /// represents the reason for the close event
     pub reason: Box<str>,
 }
 
@@ -14,9 +17,12 @@ impl fmt::Display for ConnClose {
 
 impl std::error::Error for ConnClose {}
 
+/// Errors that can occur during notification.
 #[derive(Debug)]
 pub enum NotifyError {
+    /// The event name exceeds the allowed size (255 bytes).
     EventNameTooBig,
+    /// The receiver channel has been closed.
     ReceiverClosed,
 }
 
@@ -31,6 +37,8 @@ impl fmt::Display for NotifyError {
 
 impl std::error::Error for NotifyError {}
 
+
+/// Indicates that the receiver half is closed.
 #[derive(Debug)]
 pub struct ReceiverClosed;
 

@@ -1,0 +1,20 @@
+# Ignore TypeScript source files
+src/
+*.ts
+
+# Ignore test files
+
+# Ignore configuration and development files
+tsconfig.json
+tsconfig.*.json
+deno.json
+
+# Ignore package manager lock files
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore node_modules (shouldn't be published)
+node_modules/
+
+# Ignore npm debug files
+npm-debug.log*

@@ -5,7 +5,7 @@ use axum::{
     Router,
 };
 use axum_socket_io::{Notifier, Procedure, SocketIo, SocketIoUpgrade};
-use std::{collections::HashMap, io, net::SocketAddr, sync::LazyLock};
+use std::{collections::HashMap, io, net::SocketAddr, sync::LazyLock, time::Duration};
 use tokio::{net::TcpListener, sync::mpsc::Sender};
 
 #[tokio::main]
@@ -14,21 +14,50 @@ async fn main() -> io::Result<()> {
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
         .route("/socket", get(ws_handler));
 
-    let listener = TcpListener::bind("127.0.0.1:3000").await?;
-    println!("listening on http://{}", listener.local_addr()?);
-
     LazyLock::force(&ROOM);
 
+    println!("listening on http://127.0.0.1:3000");
     axum::serve(
-        listener,
+        TcpListener::bind("127.0.0.1:3000").await?,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
     .await
 }
 
 async fn ws_handler(ws: SocketIoUpgrade, info: ConnectInfo<SocketAddr>) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, info.0))
+    ws.on_upgrade(16, move |socket| handle_socket(socket, info.0))
 }
+
+async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
+    let port = addr.port();
+    let notifier = socket.notifier();
+    // susubscribe to default room.
+    Action::Join { port, notifier }.call().await;
+
+    while let Ok(ev) = socket.recv().await {
+        match ev {
+            Procedure::Call(req, res, reset) => match req.method() {
+                "myip" => res.send(addr.to_string()).await.unwrap(),
+                "long_runing_task" => {
+                    reset.spawn_and_abort_on_reset(async {
+                        tokio::time::sleep(Duration::from_secs(3)).await;
+                        res.send("done!").await.unwrap();
+                    });
+                }
+                _ => {}
+            },
+            Procedure::Notify(req) => match req.method() {
+                "ping" => socket.notify("pong", req.data()).await.unwrap(),
+                // broadcast to every users in default room.
+                "chat_message" => Action::Broadcast(req.data().into()).call().await,
+                _ => {}
+            },
+        }
+    }
+    Action::Leave { port }.call().await;
+}
+
+// ----------------------------------------------------------------------------------------
 
 enum Action {
     Join { port: u16, notifier: Notifier },
@@ -73,26 +102,3 @@ static ROOM: LazyLock<Sender<Action>> = LazyLock::new(|| {
     });
     tx
 });
-
-async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
-    let port = addr.port();
-    let notifier = socket.notifier();
-    // susubscribe to default room.
-    Action::Join { port, notifier }.call().await;
-
-    while let Ok(ev) = socket.recv().await {
-        match ev {
-            Procedure::Call(req, res, _) => match req.method() {
-                "myip" => res.send(addr.to_string()).await.unwrap(),
-                _ => {}
-            },
-            Procedure::Notify(req) => match req.method() {
-                "echo" => socket.notify("echo", req.data()).await.unwrap(),
-                // broadcast to every users in default room.
-                "chat_message" => Action::Broadcast(req.data().into()).call().await,
-                _ => {}
-            },
-        }
-    }
-    Action::Leave { port }.call().await;
-}
