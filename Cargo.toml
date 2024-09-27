@@ -1,2 +1,3 @@
 [workspace]
 members = ["examples/basic", "libs/axum-socket-io", "libs/web-socket-io"]
+resolver = "2"
