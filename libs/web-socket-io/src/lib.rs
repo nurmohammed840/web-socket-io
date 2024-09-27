@@ -1,5 +1,5 @@
 #![warn(missing_docs)]
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../../../README.md")]
 
 /// Error types
 pub mod error;
@@ -25,13 +25,13 @@ pub(crate) type DynErr = Box<dyn std::error::Error + Send + Sync>;
 type Resetter = Arc<Mutex<HashMap<u32, ResetShared>>>;
 
 /// `SocketIo` manages WebSocket communication for handling RPC events.
-/// 
-/// It utilizes WebSocket  technology to facilitate real-time communication, providing mechanisms for sending requests 
+///
+/// It utilizes WebSocket  technology to facilitate real-time communication, providing mechanisms for sending requests
 /// and receiving responses.
-/// 
-/// Additionally, it supports RPC cancellation and timeout functionality, 
+///
+/// Additionally, it supports RPC cancellation and timeout functionality,
 /// allowing for better control over ongoing operations.
-/// 
+///
 /// The struct efficiently manages concurrent RPC events and notifies clients of relevant occurrences.
 pub struct SocketIo {
     ws: WebSocket<Box<dyn AsyncRead + Send + Unpin + 'static>>,

@@ -1,11 +1,2 @@
 [workspace]
-members = ["examples/basic", "libs/axum-socket-io"]
-
-[package]
-name = "web-socket-io"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-web-socket = "0.7"
-tokio = { version = "1", features = ["sync", "rt"] }
+members = ["examples/basic", "libs/axum-socket-io", "libs/web-socket-io"]

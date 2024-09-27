@@ -10,4 +10,4 @@ sha-1 = "0.10"
 base64 = "0.21"
 hyper = "1.2.0"
 hyper-util = "0.1"
-web-socket-io = { path = "../../" }
+web-socket-io = { path = "../web-socket-io" }

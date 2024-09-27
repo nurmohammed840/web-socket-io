@@ -2,6 +2,11 @@
 
 It provides a robust framework for real-time communication over [WebSocket](https://en.wikipedia.org/wiki/WebSocket), inspired by [Socket.IO](https://socket.io/). It simplifies the process of sending and receiving messages while offering built-in support for cancellation and timeout functionalities.
 
+## Features
+
+- **Request/Response**: clients to send requests and receive responses from the server.
+- **Cancellation**: mechanisms to cancel ongoing operations on requests.
+- **Bi-directional Notifications**: allowing both clients and servers to notify each other of events instantly. similar to [Socket.IO](https://socket.io/)
 
 ### Learn More
 

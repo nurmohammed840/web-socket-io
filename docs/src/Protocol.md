@@ -16,16 +16,15 @@ Each frame begins with an opcode (`u8`), indicating the frame type.
 | :----------: | :--------: | ------------------------------------------------------------------------------ |
 |      1       |   Notify   | Sent by the client or server to indicate an event with no `Response` expected. |
 |      2       |  Request   | Sent only by the client to initiate an RPC call and expect a `Response`.       |
-|      3       |   Reset    | Sent only by only the client to cancel an ongoing RPC call.                    |
+|      3       |   Reset    | Sent only by the client to cancel an ongoing RPC call.                         |
 |      4       |  Response  | Sent only by the server to return the result of a `Request`.                   |
 
 ### Notify Frame
 
-A `Notify` is a `Request` frame without an `id` field. A `Request` frame that
-is a `Notify` signifies the Client's lack of interest in the corresponding
+A `Notify` is a `Request` frame without an `id` field. A `Request` frame that is
+a `Notify` signifies the Client's lack of interest in the corresponding
 `Response` frame, and as such no `Response` frame needs to be returned to the
-client. The Server MUST NOT reply to a `Notify`, including those that are within
-a batch request.
+client. The Server MUST NOT reply to a `Notify`.
 
 |  Notify Frame   |   Type   |
 | :-------------: | :------: |
