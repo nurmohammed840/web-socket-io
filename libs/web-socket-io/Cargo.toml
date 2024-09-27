@@ -2,6 +2,7 @@
 name = "web-socket-io"
 version = "0.1.0"
 edition = "2021"
+description = "A protocol for event-driven, bi-directional communication between clients and servers"
 
 license = "MIT"
 keywords = ["ws", "websocket"]
