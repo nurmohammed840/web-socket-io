@@ -5,6 +5,9 @@ framework [axum](https://github.com/tokio-rs/axum), along with
 [axum-socket-io](https://github.com/nurmohammed840/web-socket-io) for real-time
 communication.
 
+You can find the full source code for this tutorial
+[here](https://github.com/nurmohammed840/web-socket-io/tree/master/example).
+
 ### Setup
 
 1. Initialize a new Rust project
