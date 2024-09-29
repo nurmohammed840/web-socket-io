@@ -1,8 +1,10 @@
 # Summary
 
-- [Introduction](./introduction.md)
+- [Introduction](./Introduction.md)
 - [Tutorial](./Tutorial.md)
-  - [Project initialization](./project_initialization.md)
-  - [Emitting events](./emitting_events.md)
+  - [Notify events](./Notify_events.md)
+  - [Request–Response](./Request-Response.md)
+  - [Cancellation](./Cancellation.md)
+  - [Broadcasting](./Broadcasting.md)
 
 - [Protocol](./Protocol.md)

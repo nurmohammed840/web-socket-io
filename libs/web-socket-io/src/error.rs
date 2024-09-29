@@ -37,7 +37,6 @@ impl fmt::Display for NotifyError {
 
 impl std::error::Error for NotifyError {}
 
-
 /// Indicates that the receiver half is closed.
 #[derive(Debug)]
 pub struct ReceiverClosed;

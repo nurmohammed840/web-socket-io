@@ -1,0 +1,33 @@
+<script type="module">
+    import { SocketIo } from "https://esm.sh/client-socket-io@0.1.0";
+    const decodeText = data => new TextDecoder().decode(data);
+
+    window.socket = new SocketIo("ws://127.0.0.1:3000/socket");
+    await socket.connect();
+
+    window.rpc = async (...args) => decodeText(await socket.call(...args))
+
+    window.long_runing_task = async timeout => {
+        const c = new AbortController();
+        setTimeout(() => c.abort("TimeOut!"), timeout);
+
+        const start = performance.now();
+        const output = await rpc("long_runing_task", [], { signal: c.signal });
+        const end = performance.now();
+        return `${output}: ${Math.round(end - start)}ms`;
+    };
+
+    async function onMessage() {
+        for await (const msg of socket.on("message")) {
+            console.log("[Message]", decodeText(msg));
+        }
+    }
+
+    async function onPong() {
+        for await (const msg of socket.on("pong")) {
+            console.log("[Pong]", decodeText(msg));
+        }
+    }
+
+    [onPong, onMessage].forEach((fn) => fn().catch(console.error));
+</script>

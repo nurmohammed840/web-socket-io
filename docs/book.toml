@@ -10,3 +10,9 @@ default-theme = "ayu"
 git-repository-icon = "fa-github"
 git-repository-url = "https://github.com/nurmohammed840/web-socket-io"
 edit-url-template = "https://github.com/nurmohammed840/web-socket-io/blob/master/docs/{path}"
+
+[output.html.code.hidelines]
+javascript = "#"
+
+[output.html.playground]
+runnable = false

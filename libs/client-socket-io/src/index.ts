@@ -47,11 +47,11 @@ export class SocketIo {
             }
             // Response
             else if (frame_type == 4) {
-                const call_id = new DataView(data.buffer).getUint32(1, false);
+                const rpc_id = new DataView(data.buffer).getUint32(1, false);
                 const payload = data.slice(5);
 
-                this.#rpc[call_id]?.(payload);
-                delete this.#rpc[call_id];
+                this.#rpc[rpc_id]?.(payload);
+                delete this.#rpc[rpc_id];
             }
         }
     }
@@ -131,8 +131,8 @@ export class SocketIo {
     async call(name: string, data: string | ArrayLike<number>, opt?: { signal?: AbortSignal }) {
         const event_name = encodeEventName(name);
         const id = this.#next_id++;
-        const call_id = new Uint8Array(4);
-        new DataView(call_id.buffer).setUint32(0, id, false);
+        const rpc_id = new Uint8Array(4);
+        new DataView(rpc_id.buffer).setUint32(0, id, false);
 
         const { promise, resolve, reject } = Promise.withResolvers<Uint8Array>();
 
@@ -140,7 +140,7 @@ export class SocketIo {
             opt.signal.onabort = () => {
                 this.ws.send(concatBytes([
                     [3],  // frame type (1 byte)
-                    call_id
+                    rpc_id
                 ]));
                 reject(new RPCAbortError(id, name, data, opt.signal?.reason));
                 delete this.#rpc[id];
@@ -150,7 +150,7 @@ export class SocketIo {
         this.#rpc[id] = resolve;
         this.ws.send(concatBytes([
             [2],  // frame type (1 byte)
-            call_id,
+            rpc_id,
             [event_name.length],    // method name length (1 byte)
             event_name,                  // method name (utf8 bytes)
             typeof data == "string" ? new TextEncoder().encode(data) : data
