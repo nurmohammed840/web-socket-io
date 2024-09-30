@@ -20,35 +20,35 @@ can use the [Actor](https://en.wikipedia.org/wiki/Actor_model) pattern.
 # use std::{collections::HashMap, sync::LazyLock};
 # use tokio::sync::mpsc::{self, Sender};
 #
-pub enum Action {
+pub enum Room {
     Join { id: u16, notifier: Notifier },
-    Broadcast(Box<[u8]>),
+    Broadcast(&'static str, Box<[u8]>),
     Leave { id: u16 },
 }
 
-impl Action {
+impl Room {
     pub async fn dispatch(self) {
         TASK.send(self).await.unwrap()
     }
 }
 
-pub static TASK: LazyLock<Sender<Action>> = LazyLock::new(|| {
-    let (tx, mut rx) = mpsc::channel::<Action>(16);
+pub static TASK: LazyLock<Sender<Room>> = LazyLock::new(|| {
+    let (tx, mut rx) = mpsc::channel::<Room>(16);
     tokio::spawn(async move {
         let mut main_room = HashMap::new();
 
         while let Some(action) = rx.recv().await {
             match action {
-                Action::Join { id, notifier } => {
+                Room::Join { id, notifier } => {
                     main_room.insert(id, notifier);
                 }
-                Action::Broadcast(msg) => {
+                Room::Broadcast(ev, msg) => {
                     for user in main_room.values() {
-                        user.notify("message", &msg).await.unwrap();
+                        user.notify(ev, &msg).await.unwrap();
                     }
                 }
-                Action::Leave { id } => {
-                    main_room.remove(&port);
+                Room::Leave { id } => {
+                    main_room.remove(&id);
                 }
             }
         }
@@ -64,9 +64,8 @@ method returns a
 [Notifier](https://docs.rs/web-socket-io/latest/web_socket_io/struct.Notifier.html),
 which is responsible for sending notifications.
 
-`Notifier` is very cheap to create, so you can efficiently create multiple instances as
-needed.
-
+`Notifier` is very cheap to create, so you can efficiently create multiple
+instances as needed.
 
 ```rust
 # use crate::room::*;
@@ -77,13 +76,17 @@ needed.
 pub async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     let id = addr.port();
     let notifier = socket.notifier();
-    Action::Join { id, notifier }.dispatch().await;
+    Room::Join { id, notifier }.dispatch().await;
 #     println!("A user connected: {addr:#?}");
 
     while let Ok(ev) = socket.recv().await {
         match ev {
             Procedure::Notify(req) => match req.method() {
-                "broadcast" => Action::Broadcast(req.data().into()).dispatch().await,
+                "broadcast" => {
+                    Room::Broadcast("message", req.data().into())
+                        .dispatch()
+                        .await
+                }
 #                 "ping" => socket.notify("pong", req.data()).await.unwrap(),
 #                 _ => {}
                 /* ... */
@@ -107,7 +110,7 @@ pub async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     }
 
 #     println!("user disconnected: {addr:#?}");
-    Action::Leave { id }.dispatch().await;
+    Room::Leave { id }.dispatch().await;
 }
 ```
 

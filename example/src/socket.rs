@@ -6,14 +6,18 @@ use tokio::time::sleep;
 pub async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     let id = addr.port();
     let notifier = socket.notifier();
-    Action::Join { id, notifier }.dispatch().await;
+    Room::Join { id, notifier }.dispatch().await;
     println!("A user connected: {addr:#?}");
 
     while let Ok(ev) = socket.recv().await {
         match ev {
             Procedure::Notify(req) => match req.method() {
                 "ping" => socket.notify("pong", req.data()).await.unwrap(),
-                "broadcast" => Action::Broadcast(req.data().into()).dispatch().await,
+                "broadcast" => {
+                    Room::Broadcast("message", req.data().into())
+                        .dispatch()
+                        .await
+                }
                 _ => {}
             },
             Procedure::Call(req, res, c) => match req.method() {
@@ -34,5 +38,5 @@ pub async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
     }
 
     println!("user disconnected: {addr:#?}");
-    Action::Leave { id }.dispatch().await;
+    Room::Leave { id }.dispatch().await;
 }
