@@ -1,0 +1,368 @@
+<!DOCTYPE HTML>
+<html lang="en" class="ayu" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Broadcasting - Web Socket IO</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Tutorial.html"><strong aria-hidden="true">2.</strong> Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="Notify_events.html"><strong aria-hidden="true">2.1.</strong> Notify events</a></li><li class="chapter-item expanded "><a href="Request-Response.html"><strong aria-hidden="true">2.2.</strong> Request–Response</a></li><li class="chapter-item expanded "><a href="Cancellation.html"><strong aria-hidden="true">2.3.</strong> Cancellation</a></li><li class="chapter-item expanded "><a href="Broadcasting.html" class="active"><strong aria-hidden="true">2.4.</strong> Broadcasting</a></li></ol></li><li class="chapter-item expanded "><a href="Protocol.html"><strong aria-hidden="true">3.</strong> Protocol</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Web Socket IO</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/nurmohammed840/web-socket-io" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/nurmohammed840/web-socket-io/blob/master/docs/src/Broadcasting.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="broadcasting"><a class="header" href="#broadcasting">Broadcasting</a></h1>
+<p>To implement broadcasting functionality, we need to utilize the concept of
+<a href="https://socket.io/docs/v4/rooms/">Room</a>:</p>
+<blockquote>
+<p>A room is an arbitrary channel that sockets can <code>join</code> and <code>leave</code>. It can be
+used to broadcast events to a subset of clients.</p>
+</blockquote>
+<h2 id="room-implementation"><a class="header" href="#room-implementation">Room Implementation</a></h2>
+<p>To <a href="https://socket.io/docs/v4/rooms/#implementation-details">implement room</a>, we
+need to store <code>Notifier</code> in a map. To broadcast a message, we can simply iterate
+through the map and send the packet to all sockets.</p>
+<p>To avoid <a href="https://en.wikipedia.org/wiki/Shared_memory">shared memory</a> issues, we
+can use the <a href="https://en.wikipedia.org/wiki/Actor_model">Actor</a> pattern.</p>
+<pre><code class="language-rust"><span class="boring">use axum_socket_io::Notifier;
+</span><span class="boring">use std::{collections::HashMap, sync::LazyLock};
+</span><span class="boring">use tokio::sync::mpsc::{self, Sender};
+</span><span class="boring">
+</span>pub enum Room {
+    Join { id: u16, notifier: Notifier },
+    Broadcast(&amp;'static str, Box&lt;[u8]&gt;),
+    Leave { id: u16 },
+}
+
+impl Room {
+    pub async fn dispatch(self) {
+        TASK.send(self).await.unwrap()
+    }
+}
+
+pub static TASK: LazyLock&lt;Sender&lt;Room&gt;&gt; = LazyLock::new(|| {
+    let (tx, mut rx) = mpsc::channel::&lt;Room&gt;(16);
+    tokio::spawn(async move {
+        let mut main_room = HashMap::new();
+
+        while let Some(action) = rx.recv().await {
+            match action {
+                Room::Join { id, notifier } =&gt; {
+                    main_room.insert(id, notifier);
+                }
+                Room::Broadcast(ev, msg) =&gt; {
+                    for user in main_room.values() {
+                        user.notify(ev, &amp;msg).await.unwrap();
+                    }
+                }
+                Room::Leave { id } =&gt; {
+                    main_room.remove(&amp;id);
+                }
+            }
+        }
+    });
+    tx
+});</code></pre>
+<h2 id="server-side-rust"><a class="header" href="#server-side-rust">Server-Side (Rust)</a></h2>
+<p><a href="https://docs.rs/web-socket-io/latest/web_socket_io/struct.SocketIo.html#method.notify">socket.notifier()</a>
+method returns a
+<a href="https://docs.rs/web-socket-io/latest/web_socket_io/struct.Notifier.html">Notifier</a>,
+which is responsible for sending notifications.</p>
+<p><code>Notifier</code> is very cheap to create, so you can efficiently create multiple
+instances as needed.</p>
+<pre><code class="language-rust"><span class="boring">use crate::room::*;
+</span><span class="boring">use axum_socket_io::{Procedure, SocketIo};
+</span><span class="boring">use std::{net::SocketAddr, time::Duration};
+</span><span class="boring">use tokio::time::sleep;
+</span><span class="boring">
+</span>pub async fn handle_socket(mut socket: SocketIo, addr: SocketAddr) {
+    let id = addr.port();
+    let notifier = socket.notifier();
+    Room::Join { id, notifier }.dispatch().await;
+<span class="boring">    println!(&quot;A user connected: {addr:#?}&quot;);
+</span>
+    while let Ok(ev) = socket.recv().await {
+        match ev {
+            Procedure::Notify(req) =&gt; match req.method() {
+                &quot;broadcast&quot; =&gt; {
+                    Room::Broadcast(&quot;message&quot;, req.data().into())
+                        .dispatch()
+                        .await
+                }
+<span class="boring">                &quot;ping&quot; =&gt; socket.notify(&quot;pong&quot;, req.data()).await.unwrap(),
+</span><span class="boring">                _ =&gt; {}
+</span>                /* ... */
+            },
+<span class="boring">            Procedure::Call(req, res, c) =&gt; match req.method() {
+</span><span class="boring">                &quot;myip&quot; =&gt; res.send(addr.to_string()).await.unwrap(),
+</span><span class="boring">                &quot;uppercase&quot; =&gt; {
+</span><span class="boring">                    let msg = std::str::from_utf8(req.data()).unwrap();
+</span><span class="boring">                    res.send(msg.to_uppercase()).await.unwrap()
+</span><span class="boring">                }
+</span><span class="boring">                &quot;long_runing_task&quot; =&gt; {
+</span><span class="boring">                    c.spawn_and_abort_on_reset(async {
+</span><span class="boring">                        sleep(Duration::from_secs(3)).await;
+</span><span class="boring">                        res.send(&quot;done!&quot;).await.unwrap();
+</span><span class="boring">                    });
+</span><span class="boring">                }
+</span><span class="boring">                _ =&gt; {}
+</span><span class="boring">            },
+</span>            /* ... */
+        }
+    }
+
+<span class="boring">    println!(&quot;user disconnected: {addr:#?}&quot;);
+</span>    Room::Leave { id }.dispatch().await;
+}</code></pre>
+<h2 id="client-side-javascript"><a class="header" href="#client-side-javascript">Client-Side (JavaScript)</a></h2>
+<pre><code class="language-javascript"><span class="boring">import { SocketIo } from &quot;https:#sm.sh/client-socket-io@0.1.0&quot;;
+</span><span class="boring">const decodeText = (data) =&gt; new TextDecoder().decode(data);
+</span><span class="boring">
+</span><span class="boring">window.socket = new SocketIo(&quot;ws://127.0.0.1:3000/socket&quot;);
+</span><span class="boring">await socket.connect();
+</span><span class="boring">
+</span><span class="boring">window.rpc = async (...args) =&gt; decodeText(await socket.call(...args));
+</span><span class="boring">
+</span><span class="boring">window.long_runing_task = async (timeout) =&gt; {
+</span><span class="boring">    const c = new AbortController();
+</span><span class="boring">    setTimeout(() =&gt; c.abort(&quot;TimeOut!&quot;), timeout);
+</span><span class="boring">
+</span><span class="boring">    const start = performance.now();
+</span><span class="boring">    const output = await rpc(&quot;long_runing_task&quot;, [], { signal: c.signal });
+</span><span class="boring">    const end = performance.now();
+</span><span class="boring">    return `${output}: ${Math.round(end - start)}ms`;
+</span><span class="boring">};
+</span><span class="boring">
+</span>async function onMessage() {
+    for await (const msg of socket.on(&quot;message&quot;)) {
+        console.log(&quot;[Message]&quot;, decodeText(msg));
+    }
+}
+<span class="boring">
+</span><span class="boring">async function onPong() {
+</span><span class="boring">    for await (const msg of socket.on(&quot;pong&quot;)) {
+</span><span class="boring">        console.log(&quot;[Pong]&quot;, decodeText(msg));
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">[onPong, onMessage].forEach((fn) =&gt; fn().catch(console.error));
+</span></code></pre>
+<p><img src="assets/chat.png" alt="Chat Example" /></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="Cancellation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="Protocol.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="Cancellation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="Protocol.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
